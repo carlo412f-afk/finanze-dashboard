@@ -24,15 +24,17 @@ class Loader(ABC):
 
 
 def _normalize_private_key(pk: str) -> str:
-    """Make the private key tolerant to literal '\\n', missing newlines around
-    BEGIN/END markers, and stray whitespace introduced by copy-paste / TOML."""
+    """Reconstruct a valid PEM from whatever format arrives via Streamlit secrets."""
+    import re
+
     pk = pk.replace("\\n", "\n").replace("\r\n", "\n").replace("\r", "\n")
     pk = pk.strip()
 
-    if "-----BEGIN" in pk:
-        pk = pk.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n")
-    if "-----END" in pk:
-        pk = pk.replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----")
+    m = re.search(r"-----BEGIN PRIVATE KEY-----(.+?)-----END PRIVATE KEY-----", pk, re.DOTALL)
+    if m:
+        body = re.sub(r"\s+", "", m.group(1))
+        chunks = [body[i : i + 64] for i in range(0, len(body), 64)]
+        return "-----BEGIN PRIVATE KEY-----\n" + "\n".join(chunks) + "\n-----END PRIVATE KEY-----\n"
 
     lines = [ln.strip() for ln in pk.split("\n") if ln.strip()]
     return "\n".join(lines) + "\n"
