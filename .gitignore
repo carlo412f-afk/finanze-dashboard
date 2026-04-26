@@ -1,0 +1,12 @@
+.env
+.streamlit/secrets.toml
+service_account.json
+*.json
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.vscode/
+.idea/
+*.log
+data/cache/
