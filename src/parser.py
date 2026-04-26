@@ -22,7 +22,7 @@ SUMMARY_LABELS = {
     "entrate", "entrate totali",
     "percentuale risparmi", "% risparmi",
     "obiettivo",
-    "totale generale", "ale generale",
+    "totale generale", "ale generale", "generale",
 }
 
 
@@ -97,19 +97,14 @@ def parse_eu(raw: pd.DataFrame) -> EUData:
         value_name="amount_raw",
     )
     long["amount"] = long["amount_raw"].apply(clean_amount)
-    long["month_dt"] = pd.to_datetime(long["month"], format="%Y-%b", errors="coerce")
-    if long["month_dt"].isna().all():
-        long["month_dt"] = pd.to_datetime(
-            long["month"].str.replace("set", "sep")
-            .str.replace("mag", "may")
-            .str.replace("giu", "jun")
-            .str.replace("lug", "jul")
-            .str.replace("ago", "aug")
-            .str.replace("ott", "oct")
-            .str.replace("dic", "dec"),
-            format="%Y-%b",
-            errors="coerce",
-        )
+    _IT_TO_EN = [
+        ("gen", "jan"), ("mag", "may"), ("giu", "jun"), ("lug", "jul"),
+        ("ago", "aug"), ("set", "sep"), ("ott", "oct"), ("dic", "dec"),
+    ]
+    month_norm = long["month"]
+    for it, en in _IT_TO_EN:
+        month_norm = month_norm.str.replace(it, en, case=False, regex=False)
+    long["month_dt"] = pd.to_datetime(month_norm, format="%Y-%b", errors="coerce")
     long["is_income"] = long["amount"] > 0
     long = long.drop(columns=["amount_raw"])
 
