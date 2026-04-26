@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.loader import get_loader, has_service_account
-from src.ui import budget_tab, insights_tab, overview, patrimonio, spese
+from src.ui import budget_tab, insights_tab, mutuo_tab, overview, patrimonio, spese
 
 
 st.set_page_config(
@@ -41,7 +41,6 @@ def main() -> None:
     try:
         eu_long, eu_summary = loader.load_eu()
         log_df = loader.load_log()
-        patrimonio_df = loader.load_patrimonio()
     except Exception as e:
         st.error(f"Errore nel caricamento dati: {e}")
         st.info(
@@ -55,6 +54,7 @@ def main() -> None:
         "🏷️ Spese per categoria",
         "🎯 Budget & Target",
         "🏦 Patrimonio",
+        "🏠 Mutuo",
         "💡 Insights",
     ])
 
@@ -65,8 +65,10 @@ def main() -> None:
     with tabs[2]:
         budget_tab.render(eu_long)
     with tabs[3]:
-        patrimonio.render(patrimonio_df)
+        patrimonio.render()
     with tabs[4]:
+        mutuo_tab.render(eu_long)
+    with tabs[5]:
         insights_tab.render(eu_long, log_df)
 
 
