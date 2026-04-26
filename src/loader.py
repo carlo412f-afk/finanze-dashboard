@@ -23,15 +23,31 @@ class Loader(ABC):
     def load_patrimonio(self) -> pd.DataFrame: ...
 
 
+def _normalize_private_key(pk: str) -> str:
+    """Make the private key tolerant to literal '\\n', missing newlines around
+    BEGIN/END markers, and stray whitespace introduced by copy-paste / TOML."""
+    pk = pk.replace("\\n", "\n").replace("\r\n", "\n").replace("\r", "\n")
+    pk = pk.strip()
+
+    if "-----BEGIN" in pk:
+        pk = pk.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n")
+    if "-----END" in pk:
+        pk = pk.replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----")
+
+    lines = [ln.strip() for ln in pk.split("\n") if ln.strip()]
+    return "\n".join(lines) + "\n"
+
+
 @st.cache_resource(show_spinner=False)
 def _gspread_client():
     import gspread
     from google.oauth2.service_account import Credentials
 
-    creds = Credentials.from_service_account_info(
-        dict(st.secrets["gcp_service_account"]),
-        scopes=SCOPES,
-    )
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    if "private_key" in creds_dict:
+        creds_dict["private_key"] = _normalize_private_key(creds_dict["private_key"])
+
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
 
 
