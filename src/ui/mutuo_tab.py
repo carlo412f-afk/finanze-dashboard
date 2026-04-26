@@ -43,7 +43,7 @@ def render(eu_long: pd.DataFrame) -> None:
         reddito = st.number_input(
             "Reddito netto mensile (€)",
             min_value=0.0,
-            value=round(avg_inc) if avg_inc > 0 else 2000.0,
+            value=float(round(avg_inc)) if avg_inc > 0 else 2000.0,
             step=100.0,
             help="Pre-compilato dalla media dei mesi con stipendio. Modificalo se necessario.",
         )
